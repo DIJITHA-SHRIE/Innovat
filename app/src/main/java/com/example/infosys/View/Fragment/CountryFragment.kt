@@ -59,7 +59,7 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        if (isOnline(requireActivity())) {
+        if (isOnline(requireActivity()) && roomDataViewModel.getDataCountFromRoomVM == 0 ) {
             binding.swipeRefresh.isRefreshing = true
 
             countryViewModel.getCanadaDetailsOrie().observe(viewLifecycleOwner, Observer(function = fun(canadaList: DataResponse?) {
