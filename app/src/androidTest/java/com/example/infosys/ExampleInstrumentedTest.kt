@@ -2,18 +2,28 @@ package com.example.infosys
 
 import android.content.Context
 import android.net.ConnectivityManager
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.fragment.app.testing.launchFragmentInContainer
+import androidx.lifecycle.Observer
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.infosys.Model.DataResponse
+import com.example.infosys.Network.mainModule
+import com.example.infosys.Repository.DataRepository
 import com.example.infosys.View.Fragment.InnovatFragment
+import com.example.infosys.ViewModel.CountryViewModel
+import org.hamcrest.CoreMatchers
+import org.junit.*
 import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
 import org.junit.runner.RunWith
-
+import org.koin.standalone.StandAloneContext
+import org.koin.standalone.inject
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 
 
 /**
@@ -25,6 +35,7 @@ import org.junit.runner.RunWith
 class ExampleInstrumentedTest {
 
     lateinit var connectivityManager:ConnectivityManager
+
 
     @Test
     fun useAppContext() {
@@ -52,6 +63,7 @@ class ExampleInstrumentedTest {
     fun networkCheck(){
         assertTrue(connectivityManager.activeNetworkInfo!=null && connectivityManager.activeNetworkInfo.isConnected)
     }
+
 
 
 

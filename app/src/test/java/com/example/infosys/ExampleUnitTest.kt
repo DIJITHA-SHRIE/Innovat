@@ -1,22 +1,22 @@
 package com.example.infosys
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.Observer
 import com.example.infosys.Model.DataResponse
 import com.example.infosys.Network.mainModule
 import com.example.infosys.Repository.DataRepository
 import com.example.infosys.ViewModel.CountryViewModel
-import io.reactivex.Observer
 import org.hamcrest.CoreMatchers
-import org.junit.Assert
-import org.junit.Test
+import org.junit.*
 
-import org.junit.Before
-import org.junit.Rule
 import org.koin.dsl.module.applicationContext
 import org.koin.standalone.StandAloneContext.loadKoinModules
+import org.koin.standalone.StandAloneContext.startKoin
+import org.koin.standalone.StandAloneContext.stopKoin
 import org.koin.standalone.inject
 import org.koin.test.KoinTest
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
 /**
@@ -28,6 +28,7 @@ class ExampleUnitTest: KoinTest {
     val viewModel: CountryViewModel by inject()
     val repository: DataRepository by inject()
 
+
     @Mock
     lateinit var uiData: Observer<DataResponse>
 
@@ -35,14 +36,23 @@ class ExampleUnitTest: KoinTest {
     val rule = InstantTaskExecutorRule()
 
     @Before
-    fun before(){
+    fun setup(){
         MockitoAnnotations.initMocks(this)
-        loadKoinModules(listOf(mainModule, applicationContext {  }))
+        startKoin(listOf(mainModule))
+        }
+    @After
+    fun cleanUp(){
+        stopKoin()
     }
 
     @Test
     fun testDetail(){
+
+        viewModel.canadaResponseData.observeForever(uiData)
+        val value = viewModel.canadaResponseData.value
+        Mockito.verify(uiData).onChanged(DataResponse(value!!.id,value!!.title,value!!.rows))
         Assert.assertNotNull(viewModel.canadaResponseData.value)
+
     }
 
     @Test
