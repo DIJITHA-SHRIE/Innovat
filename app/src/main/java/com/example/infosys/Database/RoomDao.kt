@@ -1,5 +1,6 @@
 package com.example.infosys.Database
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.example.infosys.Model.DataResponse
 import com.example.infosys.Model.RowResponse
@@ -8,7 +9,7 @@ import com.example.infosys.Model.RowResponse
 @Dao
 interface RoomDao {
     @Query("SELECT * FROM canada_offline_storage")
-    fun getAll(): DataResponse
+    fun getAll(): LiveData<DataResponse>
 
     @Query("SELECT COUNT(*) FROM canada_offline_storage")
     fun getCount(): Int

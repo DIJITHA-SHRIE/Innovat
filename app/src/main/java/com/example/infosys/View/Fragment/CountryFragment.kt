@@ -10,14 +10,18 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.infosys.Database.AppDatabase
 import com.example.infosys.Model.DataResponse
 import com.example.infosys.R
+import com.example.infosys.Utilities.InjectorUtils
 import com.example.infosys.View.Adapter.DataAdapter
 import com.example.infosys.ViewModel.CountryViewModel
+import com.example.infosys.ViewModel.RoomDataViewModel
 import com.example.infosys.databinding.FragmentInnovatBinding
 import org.koin.android.viewmodel.ext.android.getViewModel
 
@@ -46,34 +50,37 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
     lateinit var countryViewModel: CountryViewModel
     private val PREF_NAME = "DATASTORAGE"
     private lateinit var roomUser: DataResponse
-    private lateinit var db: AppDatabase
 
     var activity = getActivity() as? Context
+
+    private val roomDataViewModel: RoomDataViewModel by viewModels {
+        InjectorUtils.provideRoomDataViewModelFactory(requireActivity())
+    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        if (isOnline(activity!!)) {
+        if (isOnline(requireActivity()!!)) {
             binding.swipeRefresh.isRefreshing = true
 
             countryViewModel.getCanadaDetailsOrie().observe(viewLifecycleOwner, Observer(function = fun(canadaList: DataResponse?) {
                     canadaList?.let {
                         binding.swipeRefresh.isRefreshing = false
-                        getActivity()!!.title = canadaList.title
+                        requireActivity()!!.title = canadaList.title
                         var dataAdapter: DataAdapter =
                             DataAdapter(
                                 canadaList.rows,
-                                activity!!
+                                requireActivity()!!
                             )
                         binding.canadaRecyclerView.adapter = dataAdapter
 
                         // store data in room
-                        if (db != null && db.userDao().getCount() > 0) {
-                            db.userDao().updateTodo(canadaList.title, canadaList.rows, 1)
+                        if (roomDataViewModel.getDataCountFromRoomVM > 0) {
+                            roomDataViewModel.updateDataToRoomVM(canadaList.title, canadaList.rows, 1)
 
                         } else {
                             roomUser = DataResponse(0, canadaList.title, canadaList.rows)
-                            db.userDao().insertAll(roomUser)
+                            roomDataViewModel.insertAllDataToRoomVM(roomUser)
                         }
                     }
                 })
@@ -90,20 +97,25 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
         } else {
             binding.progressBar.visibility = View.GONE
 
-            if (db != null && db.userDao().getCount() > 0) {
-                roomUser = db.userDao().getAll()
-                Log.i("getAllRoom", roomUser.title)
-                getActivity()!!.title = roomUser.title
-                var dataAdapter: DataAdapter =
-                    DataAdapter(
-                        roomUser.rows,
-                        activity!!
-                    )
-                binding.canadaRecyclerView.adapter = dataAdapter
+            if (roomDataViewModel.getDataCountFromRoomVM > 0) {
+                roomDataViewModel.getAllDataFromRoomVM.observe(viewLifecycleOwner, Observer { res ->
+                    roomUser = res
+                    Log.i("getAllRoom", roomUser.title)
+                    requireActivity()!!.title = roomUser.title
+                    var dataAdapter: DataAdapter =
+                        DataAdapter(
+                            roomUser.rows,
+                            requireActivity()!!
+                        )
+                    binding.canadaRecyclerView.adapter = dataAdapter
+
+                })
+
+
 
             } else {
                 Toast.makeText(activity, resources.getString(R.string.no_internet), Toast.LENGTH_LONG).show()
-                val connectivityManager = context!!.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                val connectivityManager = requireActivity()!!.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 val networkInfo = connectivityManager.activeNetworkInfo
                 isConnected = networkInfo != null && networkInfo.isConnected
                 if (!isConnected) {
@@ -140,8 +152,6 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_innovat, container, false)
         binding.setLifecycleOwner(this)
-        db = AppDatabase(activity!!)
-
         binding.canadaRecyclerView!!.layoutManager = LinearLayoutManager(
             activity,
             LinearLayoutManager.VERTICAL, false
@@ -165,7 +175,7 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
     }
 
     override fun onRefresh() {
-        if (isOnline(activity!!)) {
+        if (isOnline(requireActivity()!!)) {
             countryViewModel.refreshUser()
         } else {
             binding.swipeRefresh.isRefreshing = false
