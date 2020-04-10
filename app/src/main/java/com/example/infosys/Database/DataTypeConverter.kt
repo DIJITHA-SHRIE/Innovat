@@ -12,6 +12,7 @@ class DataTypeConverter {
     val gson = Gson()
     @TypeConverter fun stringToList(data: String?): ArrayList<RowResponse> {
         if (data == null) {
+            @Suppress("UNCHECKED_CAST")
             return EMPTY_LIST as ArrayList<RowResponse>
         }
 

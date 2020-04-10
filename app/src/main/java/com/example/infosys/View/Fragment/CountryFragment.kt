@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.infosys.View.Fragment
 
 import android.content.Context
@@ -12,10 +14,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.example.infosys.Database.AppDatabase
 import com.example.infosys.Model.DataResponse
 import com.example.infosys.R
 import com.example.infosys.Utilities.InjectorUtils
@@ -48,7 +48,6 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
     private var listener: OnFragmentInteractionListener? = null
     private lateinit var binding: FragmentInnovatBinding
     lateinit var countryViewModel: CountryViewModel
-    private val PREF_NAME = "DATASTORAGE"
     private lateinit var roomUser: DataResponse
 
     var activity = getActivity() as? Context
@@ -60,17 +59,17 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        if (isOnline(requireActivity()!!)) {
+        if (isOnline(requireActivity())) {
             binding.swipeRefresh.isRefreshing = true
 
             countryViewModel.getCanadaDetailsOrie().observe(viewLifecycleOwner, Observer(function = fun(canadaList: DataResponse?) {
                     canadaList?.let {
                         binding.swipeRefresh.isRefreshing = false
-                        requireActivity()!!.title = canadaList.title
-                        var dataAdapter: DataAdapter =
+                        requireActivity().title = canadaList.title
+                        val dataAdapter =
                             DataAdapter(
                                 canadaList.rows,
-                                requireActivity()!!
+                                requireActivity()
                             )
                         binding.canadaRecyclerView.adapter = dataAdapter
 
@@ -97,25 +96,19 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
         } else {
             binding.progressBar.visibility = View.GONE
 
-            if (roomDataViewModel.getDataCountFromRoomVM > 0) {
-                roomDataViewModel.getAllDataFromRoomVM.observe(viewLifecycleOwner, Observer { res ->
-                    roomUser = res
-                    Log.i("getAllRoom", roomUser.title)
-                    requireActivity()!!.title = roomUser.title
-                    var dataAdapter: DataAdapter =
-                        DataAdapter(
-                            roomUser.rows,
-                            requireActivity()!!
-                        )
-                    binding.canadaRecyclerView.adapter = dataAdapter
+            if (roomDataViewModel.getDataCountFromRoomVM > 0) this.roomDataViewModel.getAllDataFromRoomVM.observe(viewLifecycleOwner, Observer { res ->
+                roomUser = res
+                Log.i("getAllRoom", roomUser.title)
+                requireActivity().title = roomUser.title
+                val dataAdapter = DataAdapter(
+                        roomUser.rows,
+                        requireActivity()
+                    )
+                binding.canadaRecyclerView.adapter = dataAdapter
 
-                })
-
-
-
-            } else {
+            }) else {
                 Toast.makeText(activity, resources.getString(R.string.no_internet), Toast.LENGTH_LONG).show()
-                val connectivityManager = requireActivity()!!.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                val connectivityManager = requireActivity().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 val networkInfo = connectivityManager.activeNetworkInfo
                 isConnected = networkInfo != null && networkInfo.isConnected
                 if (!isConnected) {
@@ -152,7 +145,7 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_innovat, container, false)
         binding.setLifecycleOwner(this)
-        binding.canadaRecyclerView!!.layoutManager = LinearLayoutManager(
+        binding.canadaRecyclerView.layoutManager = LinearLayoutManager(
             activity,
             LinearLayoutManager.VERTICAL, false
         )
@@ -165,9 +158,7 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
         )
         return binding.root
     }
-
-
-        fun isOnline(context: Context): Boolean {
+    fun isOnline(context: Context): Boolean {
             val connectivityManager =
                 context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkInfo = connectivityManager.activeNetworkInfo
@@ -175,7 +166,7 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
     }
 
     override fun onRefresh() {
-        if (isOnline(requireActivity()!!)) {
+        if (isOnline(requireActivity()) && roomDataViewModel.getDataCountFromRoomVM == 0 ) {
             countryViewModel.refreshUser()
         } else {
             binding.swipeRefresh.isRefreshing = false
@@ -183,11 +174,6 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
 
 
     }
-
-    // TODO: Rename method, update argument and hook method into UI event
-        fun onButtonPressed(uri: Uri) {
-            listener?.onFragmentInteraction(uri)
-        }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -212,8 +198,6 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
      * for more information.
      */
     interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
     }
 
     companion object {
@@ -240,10 +224,10 @@ class InnovatFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener {
         object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 isConnected = true
-                fragmentManager!!.beginTransaction()
-                    .replace(R.id.details_fragment,
-                        InnovatFragment()
-                    ).commit()
+                try {
+                    fragmentManager!!.beginTransaction().replace(R.id.details_fragment, InnovatFragment()).commit()
+                } catch (e: Exception) {
+                }
             }
             override fun onLost(network: Network) {
                 isConnected = false

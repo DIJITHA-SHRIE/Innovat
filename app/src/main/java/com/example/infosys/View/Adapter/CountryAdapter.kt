@@ -44,17 +44,17 @@ class DataViewHolder constructor(itemView: View, binding: AdapterLayBinding) : R
             if (title != null) {
                 mBinding.title.text = title
             } else {
-                mBinding.title.text = "Not Available"
+                mBinding.title.text = context.resources.getString(R.string.NA)
             }
 
             if (description != null) {
                 mBinding.description.text = description
             } else {
-                mBinding.description.text = "Not Available"
+                mBinding.description.text = context.resources.getString(R.string.NA)
             }
 
             val options =
-                RequestOptions().placeholder(R.drawable.infosys_logo).error(R.drawable.infosys_logo);
+                RequestOptions().placeholder(R.drawable.infosys_logo).error(R.drawable.infosys_logo)
 
             if (imageHref != null) {
                 Glide.with(context)
